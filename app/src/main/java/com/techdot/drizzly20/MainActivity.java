@@ -2,6 +2,7 @@ package com.techdot.drizzly20;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 
 import android.Manifest;
 import android.content.Context;
@@ -15,19 +16,24 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.provider.Settings;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnCanceledListener;
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 
 
-public class MainActivity extends AppCompatActivity{
+public class MainActivity extends AppCompatActivity {
 
-    private LocationManager locationManager;
-    TextView test;
     private static final int REQUEST_LOCATION = 1;
+    TextView test;
+    private LocationManager locationManager;
     private FusedLocationProviderClient fusedLocationProviderClient;
 
     @Override
@@ -39,71 +45,45 @@ public class MainActivity extends AppCompatActivity{
 
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        if (getApplicationContext().checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED) {
 
-            if (getApplicationContext().checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)
-                    == PackageManager.PERMISSION_GRANTED) {
 
-                fusedLocationProviderClient.getLastLocation()
-                        .addOnSuccessListener(new OnSuccessListener<Location>() {
-                            @Override
-                            public void onSuccess(Location location) {
-                                if (location != null) {
-                                    double lat = location.getLatitude();
-                                    double lon = location.getLongitude();
+            fusedLocationProviderClient.getCurrentLocation(100, null)
+                    .addOnSuccessListener(new OnSuccessListener<Location>() {
+                        @Override
+                        public void onSuccess(Location location) {
+                            if (location != null) {
+                                double lat = location.getLatitude();
+                                double lon = location.getLongitude();
 
-                                    Intent weatherIntent = new Intent(MainActivity.this, WeatherActivity.class);
-                                    weatherIntent.putExtra("latitude", lat);
-                                    weatherIntent.putExtra("longitude", lon);
+                                Intent weatherIntent = new Intent(MainActivity.this, WeatherActivity.class);
+                                weatherIntent.putExtra("latitude", lat);
+                                weatherIntent.putExtra("longitude", lon);
 
-                                    new Handler().postDelayed(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            startActivity(weatherIntent);
-                                            finish();
-                                        }
-                                    }, 1000);
-                                }
+                                new Handler().postDelayed(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        startActivity(weatherIntent);
+                                        finish();
+                                    }
+                                }, 1000);
                             }
-                        });
-            } else {
-                requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 500);
-            }
+                        }
+                    }).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull @NotNull Exception e) {
+                    startActivityForResult(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS), 500);
+                    e.printStackTrace();
+                }
+            }).addOnCanceledListener(new OnCanceledListener() {
+                @Override
+                public void onCanceled() {
+                    startActivityForResult(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS), 500);
+                }
+            });
+        } else {
+            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 500);
         }
-
-//        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-//        try {
-//            Location location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-//            onLocationChanged(location);
-//        } catch (SecurityException se) {
-//            se.printStackTrace();
-//        }
     }
-
-//    @Override
-//    public void onLocationChanged(@NonNull Location location) {
-//        double longitude= location.getLongitude();
-//        double latitude= location.getLatitude();
-//        // Code to start the weather intent
-//            Intent weatherIntent = new Intent(MainActivity.this, WeatherActivity.class);
-//            weatherIntent.putExtra("latitude", latitude);
-//            weatherIntent.putExtra("longitude", longitude);
-//        new Handler().postDelayed(new Runnable() {
-//            @Override
-//            public void run() {
-//                startActivity(weatherIntent);
-//                finish();
-//            }
-//        }, 1000);
-//    }
-
-//    @Override
-//    public void onProviderEnabled(@NonNull String provider) {
-//
-//    }
-//
-//    @Override
-//    public void onProviderDisabled(@NonNull String provider) {
-//
-//    }
 }
