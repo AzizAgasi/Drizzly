@@ -33,7 +33,6 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int REQUEST_LOCATION = 1;
     TextView test;
-    private LocationManager locationManager;
     private FusedLocationProviderClient fusedLocationProviderClient;
 
     @Override
