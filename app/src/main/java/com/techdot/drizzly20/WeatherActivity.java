@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -22,7 +23,6 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class WeatherActivity extends AppCompatActivity {
 
-    public static String baseUrl = "http://api.openweathermap.org/";
     public static String appId = "94fcc47c31cb32ea1469f997383fbda4";
 
     TextView mainWeather;
@@ -31,6 +31,11 @@ public class WeatherActivity extends AppCompatActivity {
     TextView windSpeed;
     TextView humidity;
     TextView feelsLike;
+
+    TextView windSpeedUnits;
+    TextView humidityUnits;
+    ImageView windSpeedIcon;
+    ImageView humidityIcon;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,7 +47,6 @@ public class WeatherActivity extends AppCompatActivity {
 
         double latitude = data.getDouble("latitude");
         double longitude = data.getDouble("longitude");
-
 
 
         Log.v(WeatherActivity.class.getSimpleName(), "Latitude is: " + latitude);
@@ -60,6 +64,11 @@ public class WeatherActivity extends AppCompatActivity {
         windSpeed = findViewById(R.id.windSpeed);
         humidity = findViewById(R.id.humidity);
         feelsLike = findViewById(R.id.feelsLikeWeather);
+
+        windSpeedIcon = findViewById(R.id.windSpeedIcon);
+        windSpeedUnits = findViewById(R.id.windSpeedUnits);
+        humidityIcon = findViewById(R.id.humidityIcon);
+        humidityUnits = findViewById(R.id.humidityUnits);
     }
 
     private void setData(double latitude, double longitude) {
@@ -81,7 +90,10 @@ public class WeatherActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<WeatherResponse> call, Response<WeatherResponse> response) {
 
-                Log.v("RESPONSE", String.valueOf(response.code()));
+                windSpeedIcon.setVisibility(View.VISIBLE);
+                windSpeedUnits.setVisibility(View.VISIBLE);
+                humidityIcon.setVisibility(View.VISIBLE);
+                humidityUnits.setVisibility(View.VISIBLE);
 
                 if (response.code() == 200) {
                     WeatherResponse weatherResponse = response.body();
@@ -91,7 +103,7 @@ public class WeatherActivity extends AppCompatActivity {
                     int temperature = (int) temp;
                     mainWeather.setText(String.valueOf(temperature) + "°C");
 
-                    SimpleDateFormat formatter= new SimpleDateFormat("yyyy-MM-dd 'at' HH:mm:ss z");
+                    SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd 'at' HH:mm:ss z");
                     Date currentDate = new Date(System.currentTimeMillis());
                     String dateString = formatter.format(currentDate);
                     date.setText(dateString);
@@ -132,7 +144,7 @@ public class WeatherActivity extends AppCompatActivity {
         if (weather.getId() == 500) {
             mainWeatherImage.setImageResource(R.drawable.art_light_rain);
         }
-        if (weather.getId() == 501 ||weather.getId() == 502 || weather.getId() == 503 || weather.getId() == 504 || weather.getId() == 511 || weather.getId() == 520 || weather.getId() == 521 || weather.getId() == 522 || weather.getId() == 531) {
+        if (weather.getId() == 501 || weather.getId() == 502 || weather.getId() == 503 || weather.getId() == 504 || weather.getId() == 511 || weather.getId() == 520 || weather.getId() == 521 || weather.getId() == 522 || weather.getId() == 531) {
             mainWeatherImage.setImageResource(R.drawable.art_rain);
         }
         if (weather.getId() == 600 || weather.getId() == 601 || weather.getId() == 602 || weather.getId() == 611 || weather.getId() == 612 || weather.getId() == 613 || weather.getId() == 615 || weather.getId() == 616 || weather.getId() == 620 || weather.getId() == 621 || weather.getId() == 622) {
