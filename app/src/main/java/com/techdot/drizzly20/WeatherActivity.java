@@ -2,6 +2,8 @@ package com.techdot.drizzly20;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.location.Address;
+import android.location.Geocoder;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -11,8 +13,11 @@ import android.widget.TextView;
 import com.techdot.drizzly20.weatherProvider.Weather;
 import com.techdot.drizzly20.weatherProvider.WeatherResponse;
 
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 import retrofit2.Call;
@@ -31,11 +36,16 @@ public class WeatherActivity extends AppCompatActivity {
     TextView windSpeed;
     TextView humidity;
     TextView feelsLike;
+    TextView maxTemp;
+    TextView minTemp;
+
+    TextView myLocation;
 
     TextView windSpeedUnits;
     TextView humidityUnits;
     ImageView windSpeedIcon;
     ImageView humidityIcon;
+    ImageView locationIcon;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,11 +74,16 @@ public class WeatherActivity extends AppCompatActivity {
         windSpeed = findViewById(R.id.windSpeed);
         humidity = findViewById(R.id.humidity);
         feelsLike = findViewById(R.id.feelsLikeWeather);
+        maxTemp = findViewById(R.id.maxTemp);
+        minTemp = findViewById(R.id.minTemp);
 
         windSpeedIcon = findViewById(R.id.windSpeedIcon);
         windSpeedUnits = findViewById(R.id.windSpeedUnits);
         humidityIcon = findViewById(R.id.humidityIcon);
         humidityUnits = findViewById(R.id.humidityUnits);
+
+        myLocation = findViewById(R.id.myLocation);
+        locationIcon = findViewById(R.id.locationIcon);
     }
 
     private void setData(double latitude, double longitude) {
@@ -90,12 +105,14 @@ public class WeatherActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<WeatherResponse> call, Response<WeatherResponse> response) {
 
-                windSpeedIcon.setVisibility(View.VISIBLE);
-                windSpeedUnits.setVisibility(View.VISIBLE);
-                humidityIcon.setVisibility(View.VISIBLE);
-                humidityUnits.setVisibility(View.VISIBLE);
 
                 if (response.code() == 200) {
+
+                    windSpeedIcon.setVisibility(View.VISIBLE);
+                    windSpeedUnits.setVisibility(View.VISIBLE);
+                    humidityIcon.setVisibility(View.VISIBLE);
+                    humidityUnits.setVisibility(View.VISIBLE);
+
                     WeatherResponse weatherResponse = response.body();
 
                     assert weatherResponse != null;
@@ -103,10 +120,18 @@ public class WeatherActivity extends AppCompatActivity {
                     int temperature = (int) temp;
                     mainWeather.setText(String.valueOf(temperature) + "°C");
 
-                    SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd 'at' HH:mm:ss z");
+                    SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy\nEEEE");
                     Date currentDate = new Date(System.currentTimeMillis());
                     String dateString = formatter.format(currentDate);
                     date.setText(dateString);
+
+                    double maxTemperature = weatherResponse.main.getTempMax() - 273.15;
+                    int maxTempInt = (int) maxTemperature;
+                    maxTemp.setText("Maximum: " + String.valueOf(maxTempInt) + "°C");
+
+                    double minTemperature = weatherResponse.main.getTempMin() - 273.15;
+                    int minTempInt = (int) minTemperature;
+                    minTemp.setText("Minimum: " + String.valueOf(minTempInt) + "°C");
 
                     int wind = (int) (weatherResponse.wind.getSpeed() * 2.23);
                     windSpeed.setText(String.valueOf(wind));
@@ -115,6 +140,18 @@ public class WeatherActivity extends AppCompatActivity {
 
                     int feelsLikeTemp = (int) (weatherResponse.main.getFeelsLike() - 273.15);
                     feelsLike.setText("Feels like: " + String.valueOf(feelsLikeTemp) + "°C");
+
+                    Geocoder geocoder = new Geocoder(WeatherActivity.this, Locale.getDefault());
+                    List<Address> addresses = null;
+                    try {
+                        addresses = geocoder.getFromLocation(latitude, longitude, 1);
+                        String address = addresses.get(0).getCountryName();
+
+                        locationIcon.setVisibility(View.VISIBLE);
+                        myLocation.setText(address);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
 
                     setImage(weatherResponse);
                 }
